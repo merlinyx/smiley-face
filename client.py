@@ -76,7 +76,7 @@ class Client:
                     self.logger.info('Not found')
                     cv2.imwrite('intruder.jpg', face)
                     send(self.self_email, self.password, self.recipient,
-                         'intruder.jpg')
+                         ['intruder.jpg'])
 
 
 if __name__ == '__main__':
