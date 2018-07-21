@@ -1,5 +1,6 @@
 # Import smtplib for the actual sending function
 import smtplib
+import sys
 
 # Here are the email package modules we'll need
 from email.mime.image import MIMEImage
@@ -7,10 +8,8 @@ from email.mime.multipart import MIMEMultipart
 
 COMMASPACE = ', '
 SUBJECT = '[ALERT] We detected an unfamiliar face. '
-SENDER = 'iot.hackathon.2018@gmail.com'
-PWD = 'uF2-3Qr-fZx-fmA'
 
-def send(sender, recipients, imgfiles, subject=SUBJECT):
+def send(sender, pwd, recipients, imgfiles, subject=SUBJECT):
 	# Create the container (outer) email message.
 	msg = MIMEMultipart()
 	msg['Subject'] = subject
@@ -31,8 +30,11 @@ def send(sender, recipients, imgfiles, subject=SUBJECT):
 	with smtplib.SMTP() as s:
 		s.connect('smtp.gmail.com', '587')
 		s.starttls()
-		s.login(SENDER, PWD)
+		s.login(sender, pwd)
 		s.send_message(msg)
 
 if __name__ == '__main__':
-	send('me', ['merlinyx@icloud.com'], ['cat.jpg'])
+	sender = sys.argv[1]
+	pwd = sys.argv[2]
+	recv = [sys.argv[3]]
+	send(sender, pwd, recv, ['cat.jpg'])
