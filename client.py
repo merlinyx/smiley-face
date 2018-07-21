@@ -13,11 +13,13 @@ import cv2
 import dlib
 from numpy_socket import NumpySocket
 from preprocess import *
+from email_sender import *
 
 
 class Client:
     def __init__(self, registered_dir, server_cert, server_hostname,
-                 server_port, face_prediction, logger):
+                 server_port, face_prediction, self_email, password, recipient,
+                 logger):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.ssl_sock = ssl.wrap_socket(
             s, ca_certs=server_cert, cert_reqs=ssl.CERT_REQUIRED)
@@ -42,6 +44,9 @@ class Client:
                 self.identity_map[identity] = ave_embedding
         self.prediction_path = face_prediction
         self.logger = logger
+        self.self_email = self_email
+        self.password = password
+        self.recipient = recipient
 
     def start(self):
         camera = cv2.VideoCapture(0)
@@ -63,12 +68,15 @@ class Client:
                 for identity in self.identity_map:
                     distance = np.linalg.norm(embedding -
                                               self.identity_map[identity])
-                    if distance < 0.8:
+                    if distance < 0.65:
                         self.logger.info('found %s' % identity)
                         found = True
                         break
                 if not found:
                     self.logger.info('Not found')
+                    cv2.imwrite('intruder.jpg', face)
+                    send(self.self_email, self.password, self.recipient,
+                         'intruder.jpg')
 
 
 if __name__ == '__main__':
@@ -80,6 +88,9 @@ if __name__ == '__main__':
     parser.add_argument('--server_hostname', type=str, required=True)
     parser.add_argument('--server_port', type=int, required=True)
     parser.add_argument('--prediction_path', type=str, required=True)
+    parser.add_argument('--self_email', type=str, required=True)
+    parser.add_argument('--password', type=str, required=True)
+    parser.add_argument('--recipient', type=str, required=True)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -87,5 +98,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     client = Client(args.register_dir, args.server_cert, args.server_hostname,
-                    args.server_port, args.prediction_path, logger)
+                    args.server_port, args.prediction_path, args.self_email,
+                    args.password, args.recipient, logger)
     client.start()
